@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Relatives Home</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map { height: 500px; }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Relatives App</h2>
+
+    <!-- Buttons to switch sections -->
+    <div class="text-center mb-4">
+        <button class="btn btn-primary me-2" onclick="showSection('manage')">Manage Relatives</button>
+        <button class="btn btn-success" onclick="showSection('map')">View Map / Results</button>
+    </div>
+
+    <!-- Manage Section -->
+    <div id="manage" class="section">
+        <div class="card p-3 mb-4 shadow-sm">
+            <form id="form" class="row g-3" onsubmit="event.preventDefault(); saveData();">
+                <input type="hidden" id="id">
+                <div class="col-md-3"><input id="name" class="form-control" placeholder="Name" required></div>
+                <div class="col-md-3">
+                    <select id="relation" class="form-select">
+                        <option>Family</option>
+                        <option>Friends</option>
+                        <option>Colleague</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input id="latitude" type="number" class="form-control" placeholder="Latitude" required step="any">
+                </div>
+                <div class="col-md-3">
+                    <input id="longitude" type="number" class="form-control" placeholder="Longitude" required step="any">
+                </div>
+                <div class="col-12 text-end"><button class="btn btn-primary" type="submit">Save</button></div>
+            </form>
+        </div>
+
+        <div class="card p-3 shadow-sm">
+            <h4>Existing Relatives</h4>
+            <table class="table table-striped table-hover mt-2">
+                <thead class="table-dark">
+                <tr><th>ID</th><th>Name</th><th>Relation</th><th>Lat</th><th>Lon</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="data"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Map Section -->
+    <div id="mapSection" class="section" style="display:none;">
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Filter by Relation</label>
+                <select id="filter" class="form-select" onchange="loadMap()">
+                    <option value="All">All</option>
+                    <option value="Family">Family</option>
+                    <option value="Friends">Friends</option>
+                    <option value="Colleague">Colleague</option>
+                </select>
+            </div>
+        </div>
+        <div id="map" class="shadow-sm rounded"></div>
+    </div>
+</div>
+
+<script>
+    const apiUrl='http://localhost:8080/api/relatives';
+    const colors={Family:'red',Friends:'blue',Colleague:'green',Other:'gray'};
+
+    // Section switch function
+    function showSection(section){
+      document.getElementById('manage').style.display=section==='manage'?'block':'none';
+      document.getElementById('mapSection').style.display=section==='map'?'block':'none';
+      if(section==='map') loadMap();
+    }
+
+    // ----- Manage Section Functions -----
+    let markers=[];
+    async function loadData(){
+      const res=await fetch(apiUrl);
+      const data=await res.json();
+      document.getElementById('data').innerHTML=data.map(r=>`
+        <tr>
+          <td>${r.id}</td>
+          <td>${r.name}</td>
+          <td>${r.relation}</td>
+          <td>${r.latitude}</td>
+          <td>${r.longitude}</td>
+          <td>
+            <button class="btn btn-sm btn-warning" onclick="edit(${r.id},'${r.name}','${r.relation}',${r.latitude},${r.longitude})">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="del(${r.id})">Delete</button>
+          </td>
+        </tr>`).join('');
+    }
+
+    async function saveData(){
+      const id=document.getElementById('id').value;
+      const r={
+        name:document.getElementById('name').value,
+        relation:document.getElementById('relation').value,
+        latitude:parseFloat(document.getElementById('latitude').value),
+        longitude:parseFloat(document.getElementById('longitude').value)
+      };
+      const method=id?'PUT':'POST';
+      const url=id?`${apiUrl}/${id}`:apiUrl;
+      await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(r)});
+      document.getElementById('form').reset();
+      loadData();
+    }
+
+    function edit(id,name,relation,lat,lon){
+      document.getElementById('id').value=id;
+      document.getElementById('name').value=name;
+      document.getElementById('relation').value=relation;
+      document.getElementById('latitude').value=lat;
+      document.getElementById('longitude').value=lon;
+    }
+
+    async function del(id){ await fetch(`${apiUrl}/${id}`,{method:'DELETE'}); loadData(); }
+    window.onload=loadData;
+
+    // ----- Map Section Functions -----
+    let map = L.map('map').setView([19.7515,75.7139],6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+
+    async function loadMap(){
+       // Remove old markers
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+
+  // Get filter value
+  const filter = document.getElementById('filter').value;
+
+  // Always fetch all data
+  const res = await fetch(apiUrl);
+  const data = await res.json();
+
+  // Filter data based on dropdown
+  const filtered = filter === "All" ? data : data.filter(r => r.relation === filter);
+
+  // Show markers on map
+  filtered.forEach(r => {
+    const icon = L.divIcon({
+      className: 'custom-marker',
+      html: `
+        <div style="background:${colors[r.relation] || 'gray'};width:14px;height:14px;border-radius:50%;border:2px solid white;"></div>
+        <div style="font-size:12px;font-weight:bold;color:black;text-shadow:1px 1px 2px white;">${r.name}</div>
+      `,
+      iconAnchor: [10, 25]
+    });
+
+    const marker = L.marker([r.latitude, r.longitude], { icon }).addTo(map);
+    marker.bindPopup(`<b>${r.name}</b><br>${r.relation}`);
+    markers.push(marker);
+  });
+    }
+</script>
+
+</body>
+</html>
