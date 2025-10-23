@@ -1,47 +1,35 @@
 # 👨‍👩‍👧‍👦 FamilyMapper
 
-**FamilyMapper** is a Spring Boot web application that helps users manage and visualize their family members and their locations on an interactive map.
+**FamilyMapper** is a web application built using **Spring Boot**, **Java**, and **Bootstrap** that allows you to manage and visualize family members’ home locations on an interactive map.  
+It provides an easy interface to add, update, delete, and view relatives’ details along with their geographical locations.
 
 ---
 
 ## 🚀 Features
 
-- 🗺️ Display relatives on map (Leaflet or Google Maps)
-- ➕ Add, update, and delete family member details
-- 🔍 Filter and search family members
-- 💾 Store data in MySQL / H2
-- 🔐 RESTful API built using Spring Boot
-- 🧩 Responsive frontend using Bootstrap
+- 🗺️ **Map Visualization** – Display family members’ homes on an interactive map using Leaflet.js  
+- ➕ **CRUD Operations** – Add, update, or delete family member details  
+- 🔍 **Search & Filter** – Quickly find relatives by name or location  
+- 💾 **Persistent Storage** – Data saved in MySQL or H2 database  
+- 🧩 **Responsive UI** – Built with Bootstrap for mobile-friendly design  
+- 🔐 **REST API** – Spring Boot backend provides APIs for data management  
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|-------|-------------|
-| Backend | Java 17+, Spring Boot 3.x |
-| Database | MySQL / H2 |
-| Frontend | HTML, CSS, Bootstrap, Leaflet.js |
-| Tools | Maven, IntelliJ IDEA, Postman |
+| Layer       | Technology |
+|------------|-------------|
+| Backend     | Java 17+, Spring Boot 3.x |
+| Database    | MySQL / H2 |
+| Frontend    | HTML, CSS, Bootstrap, Leaflet.js |
+| Tools       | Maven, IntelliJ IDEA, Postman |
 
 ---
 
-## ⚙️ Setup Guide
+## ⚙️ Setup Instructions
 
-### 1️⃣ Clone Repository
-git clone https://github.com/atharvaborale/familymapper.git
+### 1️⃣ Clone the Repository
+```bash
+git clone https://github.com/<your-username>/familymapper.git
 cd familymapper
-
-src/
- ├── main/
- │   ├── java/com/example/familymapper/
- │   │   ├── controller/     # REST Controllers
- │   │   ├── service/        # Business Logic
- │   │   ├── repository/     # Data Access Layer
- │   │   └── model/          # Entity Classes
- │   └── resources/
- │       ├── static/         # HTML, CSS, JS
- │       └── application.properties
- └── test/
-     └── java/
-         └── com/example/familymapper/
